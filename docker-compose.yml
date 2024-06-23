@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  go-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.go-app.rule=Host(`localhost`) && PathPrefix(`/`)"
+      - "traefik.http.services.go-app.loadbalancer.server.port=8000"
+    ports:
+      - "8000"  # This port is internal to the service and not exposed directly
+
+  traefik:
+    image: traefik:v2.9
+    command:
+      - "--api.insecure=true"  # Enable insecure API (for demo purposes)
+      - "--providers.docker=true"  # Use Docker provider for dynamic configuration
+      - "--entrypoints.web.address=:80"  # HTTP entry point
+    ports:
+      - "80:80"   # Expose port 80 for HTTP traffic
+      - "8080:8080"  # Expose port 8080 for Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"  # Mount Docker socket for dynamic configuration
